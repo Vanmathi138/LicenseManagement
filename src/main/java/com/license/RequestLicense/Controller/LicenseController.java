@@ -1,9 +1,4 @@
 package com.license.RequestLicense.Controller;
-import java.util.Base64;
-
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -13,21 +8,18 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
 import com.license.RequestLicense.DTO.DecryptedData;
 import com.license.RequestLicense.DTO.EncryptedData;
 import com.license.RequestLicense.DTO.LicenseDto;
 import com.license.RequestLicense.Entity.License;
 import com.license.RequestLicense.Service.LicenseService;
-
 import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class LicenseController {
-	
-	 private static final String ALGORITHM = "AES";
+
 	private  final LicenseService service;
 	   
 	    @PostMapping("/create")
@@ -64,14 +56,4 @@ public class LicenseController {
 	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 	        }
 	    }
-	    
-	    @PutMapping("/generate/{id}")
-	    public ResponseEntity<License> generateLicenseKey(@PathVariable Long id) {
-	    	try {
-	            License license = service.generateLicenseKey(id);
-	            return ResponseEntity.ok(license);
-	        } catch (Exception e) {
-	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-	        }
-	    }
-	}
+}

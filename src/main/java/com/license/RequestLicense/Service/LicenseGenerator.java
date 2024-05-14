@@ -14,7 +14,7 @@ import com.license.RequestLicense.Entity.License;
 public class LicenseGenerator {
 	private static final String ALGORITHM = "AES";
 	public static String generateLicenseKey(License license, SecretKey secretKey) {
-	        String data = license.getId() + "#" + license.getName() + "#" + license.getEmail();
+	        String data = license.getId() + "#" + license.getCompanyName() + "#" + license.getEmail();
 	        try {
 	            Cipher cipher = Cipher.getInstance(ALGORITHM);
 	            cipher.init(Cipher.ENCRYPT_MODE, secretKey);

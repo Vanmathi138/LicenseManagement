@@ -11,8 +11,8 @@ import com.license.RequestLicense.Entity.License;
 @Repository
 public interface LicenseRepository extends JpaRepository<License, Long> {
 
-	Optional<License> findByName(String name);
+	//Optional<License> findByName(String name);
 
-	Optional<License> findLicenseByName(String name);
+	Optional<License> findByCompanyName(String name);
 
 }

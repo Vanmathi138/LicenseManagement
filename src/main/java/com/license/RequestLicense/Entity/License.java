@@ -25,15 +25,15 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name="request_license")
+@Table(name="license")
 public class License {
 	 	@Id
 	    @GeneratedValue(strategy = GenerationType.AUTO)
 	    @Column(name="id")
 	    private Long id;
 
-	    @Column(name="name")
-	    private String name;
+	    @Column(name="company_name")
+	    private String companyName;
 
 	    @Column(name="email")
 	    private String email;
@@ -51,6 +51,9 @@ public class License {
 	    @Column(name="expiry_date")
 	    private LocalDate expiryDate;
 
+	    @Column(name="expiry_status")
+	    private LocalDate expiryStatus;
+	    
 	    @Column(name="license_key")
 	    private String licenseKey;
 	

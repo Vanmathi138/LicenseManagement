@@ -10,9 +10,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LicenseDto {
-	private String name;
+	private String companyName;
 	private String email;
-	//private Status status;
 	private String licenseKey;
 	public String id;
 	

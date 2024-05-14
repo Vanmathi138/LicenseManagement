@@ -1,38 +1,21 @@
 package com.license.RequestLicense.Service;
-
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
 import java.security.Key ;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
-
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
-import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
 import com.license.RequestLicense.DTO.DecryptedData;
 import com.license.RequestLicense.DTO.EncryptedData;
 import com.license.RequestLicense.DTO.LicenseDto;
 import com.license.RequestLicense.Entity.License;
 import com.license.RequestLicense.Enumeration.Status;
 import com.license.RequestLicense.Repository.LicenseRepository;
-
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -71,7 +54,7 @@ public class LicenseService {
 //create
 	public License saveLicense(LicenseDto licenseDto) {
 		License license = License.builder()
-				.name(licenseDto.getName())
+				.companyName(licenseDto.getCompanyName())
 	            .email(licenseDto.getEmail())
 	            .status(Status.REQUEST)
 	            .build();
@@ -91,7 +74,7 @@ public class LicenseService {
 //encrypt license key and mail with use of secret key
 	public ResponseEntity<EncryptedData> encryptEmailAndLicenseKey(String name) {
 	    try {
-	        Optional<License> optionalLicense = repository.findLicenseByName(name);
+	        Optional<License> optionalLicense = repository.findByCompanyName(name);
 	        if (optionalLicense.isEmpty()) {
 	            // If the name doesn't exist, return a bad request response
 	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
@@ -130,10 +113,6 @@ public class LicenseService {
             String decryptedEmail = decrypt(encryptedEmail, originalKey);
             String decryptedLicenseKey = decrypt(encryptedLicenseKey, originalKey);
          
-            if(decryptedLicenseKey.matches(license.getLicenseKey())) {
-            	return repository.save(license.setStatus(Status.APPROVED));
-            }
-            
             return new DecryptedData(decryptedEmail, decryptedLicenseKey);
         } catch (Exception e) {
             e.printStackTrace();
@@ -155,47 +134,6 @@ public class LicenseService {
 	        return null;
 	    }
 	}
-	public License generateLicenseKey(Long id) {
-        // Combine the provided information to form a unique string
-	 if (id == null) {
-            throw new IllegalArgumentException("Id cannot be null");
-        }
-	 License license = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("License not found with id: " + id));;
-	 	//License license = new License();
-        String data = license.getId() + "#" + "#" + license.getName() + "#"+license.getEmail();
-
-        // Generate a unique UUID
-        UUID uuid = UUID.nameUUIDFromBytes(data.getBytes());
-        license.setLicenseKey(uuid.toString());
-       
-		return repository.save(license);
-	}
-	public String[] extractDataFromLicenseKey(String licenseKey) {
-	    // Parse the UUID from the generated license key
-	    UUID uuid = UUID.fromString(licenseKey);
-	    
-	    // Get the byte array from the UUID
-	    byte[] bytes = uuidToBytes(uuid);
-	    
-	    // Convert byte array to string
-	    String data = new String(bytes);
-	    
-	    // Split the string to retrieve the original ID and name
-	    String[] parts = data.split("#");
-	    
-	    return parts;
-	}
-
-	private byte[] uuidToBytes(UUID uuid) {
-	    long mostSignificantBits = uuid.getMostSignificantBits();
-	    long leastSignificantBits = uuid.getLeastSignificantBits();
-	    byte[] uuidBytes = new byte[16];
-	    for (int i = 0; i < 8; i++) {
-	        uuidBytes[i] = (byte) (mostSignificantBits >> (8 * (7 - i)));
-	        uuidBytes[8 + i] = (byte) (leastSignificantBits >> (8 * (7 - i)));
-	    }
-	    return uuidBytes;
-	}
-
+	
 }
 
