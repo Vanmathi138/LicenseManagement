@@ -13,6 +13,9 @@ import com.license.RequestLicense.DTO.EncryptedData;
 import com.license.RequestLicense.DTO.LicenseDto;
 import com.license.RequestLicense.Entity.License;
 import com.license.RequestLicense.Service.LicenseService;
+import com.license.RequestLicense.exception.LicenseInvalidException;
+import com.license.RequestLicense.response.MessageService;
+
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -21,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class LicenseController {
 
 	private  final LicenseService service;
-	   
+	private final MessageService messageService;
 	    @PostMapping("/create")
 	    public ResponseEntity<License> saveLicense(@RequestBody LicenseDto licenseDto) {
 	        try {
@@ -43,12 +46,12 @@ public class LicenseController {
 	    }
 	       
 	    @PostMapping("/encryption")
-	    public ResponseEntity<EncryptedData> encryptEmailAndLicenseKey(@RequestParam String name) {
-	        return service.encryptEmailAndLicenseKey(name);
+	    public ResponseEntity<EncryptedData> encryptEmailAndLicenseKey(@RequestParam String companyName) {
+	        return service.encryptEmailAndLicenseKey(companyName);
 	    }	 
 	  
-	    @PostMapping("/decryption")
-	    public ResponseEntity<DecryptedData> decryptEmailAndLicenseKey(@RequestBody EncryptedData encryptedDataDto) {
+	    @PutMapping("/decryption")
+	    public ResponseEntity<DecryptedData> decryptEmailAndLicenseKey(@RequestBody EncryptedData encryptedDataDto) throws Exception {
 	    	DecryptedData decryptedData = service.decryptEncryptedData(encryptedDataDto);
 	        if (decryptedData != null) {
 	            return ResponseEntity.ok(decryptedData);
@@ -56,4 +59,5 @@ public class LicenseController {
 	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 	        }
 	    }
+	    
 }
