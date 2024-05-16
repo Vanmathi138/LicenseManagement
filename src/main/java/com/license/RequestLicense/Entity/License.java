@@ -1,11 +1,8 @@
 package com.license.RequestLicense.Entity;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
+import java.time.LocalDate ;
 import com.license.RequestLicense.Enumeration.ExpiryStatus;
 import com.license.RequestLicense.Enumeration.Status;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

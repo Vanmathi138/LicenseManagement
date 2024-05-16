@@ -1,11 +1,9 @@
 package com.license.RequestLicense.Service;
 
-import java.security.Key;
+import java.security.Key; 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
-import java.util.List;
 import java.util.Optional;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -18,15 +16,11 @@ import org.springframework.stereotype.Service;
 import com.license.RequestLicense.DTO.DecryptedData;
 import com.license.RequestLicense.DTO.EncryptedData;
 import com.license.RequestLicense.DTO.LicenseDto;
-import com.license.RequestLicense.DTO.LicenseResponse;
 import com.license.RequestLicense.Entity.License;
 import com.license.RequestLicense.Enumeration.ExpiryStatus;
 import com.license.RequestLicense.Enumeration.Status;
 import com.license.RequestLicense.Repository.LicenseRepository;
-import com.license.RequestLicense.exception.LicenseInvalidException;
 import com.license.RequestLicense.response.MessageService;
-
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -34,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class LicenseService {
 	private final LicenseRepository repository;
 	private final MessageService messageService;
-
+	private final LicenseGenerator licenseGenerator;
 	private SecretKey secretKey = generateSecretKey();
 
 	private SecretKey generateSecretKey() {
@@ -66,7 +60,8 @@ public class LicenseService {
 
 //create
 	public License saveLicense(LicenseDto licenseDto) {
-		License license = License.builder().companyName(licenseDto.getCompanyName()).email(licenseDto.getEmail())
+		License license = new License();
+		license = License.builder().companyName(licenseDto.getCompanyName()).email(licenseDto.getEmail())
 				.status(Status.REQUEST).build();
 		return repository.save(license);
 	}
@@ -112,7 +107,6 @@ public class LicenseService {
 		}
 	}
 
-	@SuppressWarnings("unlikely-arg-type")
 	public DecryptedData decryptEncryptedData(EncryptedData encryptedDataDto) throws Exception {
 		String secretKeyStr = encryptedDataDto.getSecretKey();
 		String encryptedData = encryptedDataDto.getEncryptedData();

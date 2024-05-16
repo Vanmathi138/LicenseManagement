@@ -14,8 +14,6 @@ import com.license.RequestLicense.DTO.EncryptedData;
 import com.license.RequestLicense.DTO.LicenseDto;
 import com.license.RequestLicense.Entity.License;
 import com.license.RequestLicense.Service.LicenseService;
-import com.license.RequestLicense.exception.LicenseInvalidException;
-import com.license.RequestLicense.response.MessageService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 public class LicenseController {
 
 	private  final LicenseService service;
-	private final MessageService messageService;
 	    @PostMapping("/create")
 	    public ResponseEntity<License> saveLicense(@RequestBody LicenseDto licenseDto) {
 	        try {
