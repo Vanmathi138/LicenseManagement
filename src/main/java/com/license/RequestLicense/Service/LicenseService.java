@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import com.license.RequestLicense.DTO.DecryptedData;
 import com.license.RequestLicense.DTO.EncryptedData;
 import com.license.RequestLicense.DTO.LicenseDto;
+import com.license.RequestLicense.DTO.LicenseResponse;
 import com.license.RequestLicense.Entity.License;
 import com.license.RequestLicense.Enumeration.ExpiryStatus;
 import com.license.RequestLicense.Enumeration.Status;
@@ -77,7 +79,6 @@ public class LicenseService {
 		}
 		License license = repository.findById(id)
 				.orElseThrow(() -> new IllegalArgumentException("License not found with id: " + id));
-		;
 		String generatedLicense = LicenseGenerator.generateLicenseKey(license, secretKey);
 		license.setLicenseKey(generatedLicense);
 		return repository.save(license);
@@ -126,45 +127,41 @@ public class LicenseService {
 		String decryptedLicenseKey = decrypt(encryptedLicenseKey, originalKey);
 
 		Optional<License> originalLicense = repository.findByEmailAndLicenseKey(decryptedEmail, decryptedLicenseKey);
-		if (originalLicense.isPresent()) {
-			License optional = originalLicense.get();
+		return originalLicense.map(license -> {
 			LocalDate today = LocalDate.now();
 			LocalDate activationDate = LocalDate.now();
 			LocalDate expiryDate = activationDate.plusDays(1);
 			long daysUntilExpiration = ChronoUnit.DAYS.between(LocalDate.now(), expiryDate);
-            String gracePeriod = daysUntilExpiration + " days";
-			if (gracePeriod.equals(expiryDate)) {
-				throw new LicenseInvalidException(messageService
-						.messageResponse("Your License is expired! Please renew within 1 business week"));
-			}
-			ExpiryStatus expiryStatus;
+			String gracePeriod = daysUntilExpiration + " days";
 
-			if (today.isBefore(activationDate)) {
-				expiryStatus = ExpiryStatus.NOT_ACTIVATED;
-			} else if (today.isAfter(expiryDate)) {
-				expiryStatus = ExpiryStatus.EXPIRED;
-			} else {
-				expiryStatus = ExpiryStatus.ACTIVE;
-			}
-			if (optional.getEmail().equals(decryptedEmail) && optional.getLicenseKey().equals(decryptedLicenseKey)
-					&& optional.getStatus().equals(Status.REQUEST)) {
-				
-				optional.setStatus(Status.APPROVED);
-				optional.setActivationDate(activationDate);
-				optional.setExpiryDate(expiryDate);
-				optional.setGracePeriod(gracePeriod);
-				optional.setExpiryStatus(expiryStatus);
-				
-				repository.save(optional);
-				
+			/*if (gracePeriod.equals(expiryDate)) {
+				throw new LicenseInvalidException(
+						messageService.messageResponse("Your License is expired! Please renew within 1 business week"));
+			}*/
+
+			ExpiryStatus expiryStatus = today.isBefore(activationDate) ? ExpiryStatus.NOT_ACTIVATED : ExpiryStatus.ACTIVE;
+
+			if (license.getEmail().equals(decryptedEmail) && license.getLicenseKey().equals(decryptedLicenseKey)
+					&& license.getStatus().equals(Status.REQUEST)) {
+
+				license.setStatus(Status.APPROVED);
+				license.setActivationDate(activationDate);
+				license.setExpiryDate(expiryDate);
+				license.setGracePeriod(gracePeriod);
+				license.setExpiryStatus(expiryStatus);
+
+				repository.save(license);
+
 				return new DecryptedData(decryptedEmail, decryptedLicenseKey);
-			}else {
+			} else {
 				throw new IllegalArgumentException("Decryption failed");
 			}
-		} else {
-			throw new IllegalArgumentException("Invalid email or license key");
-		}
-
+		}).orElseThrow(() -> new IllegalArgumentException(messageService.messageResponse("Invalid encrypted data")));
 	}
 
+	public License getLicense(Long id) {
+	    Optional<License> optional = repository.findById(id);
+	    License license = optional.get();
+	    return license;
+	}
 }
