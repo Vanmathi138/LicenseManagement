@@ -154,8 +154,10 @@ public class LicenseService {
 	}
 
 	public License getLicense(Long id) {
+		LocalDate date = LocalDate.now();
 	    Optional<License> optional = repository.findById(id);
 	    License license = optional.get();
+	    license.getGracePeriod(licenseGenerator.checkGracePeriod(date));
 	    return license;
 	}
 }

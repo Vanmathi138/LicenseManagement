@@ -14,7 +14,6 @@ import com.license.RequestLicense.DTO.EncryptedData;
 import com.license.RequestLicense.DTO.LicenseDto;
 import com.license.RequestLicense.Entity.License;
 import com.license.RequestLicense.Service.LicenseService;
-
 import lombok.RequiredArgsConstructor;
 
 @Controller

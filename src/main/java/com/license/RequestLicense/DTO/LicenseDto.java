@@ -14,7 +14,5 @@ public class LicenseDto {
 	private String email;
 	private String licenseKey;
 	public String id;
-	
-	
 
 }
