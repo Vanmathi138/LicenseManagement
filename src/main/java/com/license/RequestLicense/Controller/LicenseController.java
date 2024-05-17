@@ -56,12 +56,4 @@ public class LicenseController {
 	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 	        }
 	    }
-	    @GetMapping("/getById/{id}")
-	    public ResponseEntity<?> getLicense(@PathVariable Long id)throws Exception{
-	    	try{
-	    		return ResponseEntity.ok(service.getLicense(id));
-	    	}catch (Exception e) {
-	    		return ResponseEntity.internalServerError().body(null);
-	    	}
-	    }
 }

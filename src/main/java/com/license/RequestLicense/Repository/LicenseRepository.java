@@ -1,5 +1,7 @@
 package com.license.RequestLicense.Repository;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Optional; 
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,5 +14,5 @@ public interface LicenseRepository extends JpaRepository<License, Long> {
 	Optional<License> findByCompanyName(String companyName);
 
 	Optional<License> findByEmailAndLicenseKey(String email, String licenseKey);
-
+	
 }

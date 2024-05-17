@@ -1,7 +1,13 @@
 package com.license.RequestLicense.Service;
 
 import java.security.Key;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Optional;
@@ -13,6 +19,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.license.RequestLicense.DTO.DecryptedData;
@@ -21,11 +28,12 @@ import com.license.RequestLicense.Entity.License;
 import com.license.RequestLicense.Enumeration.ExpiryStatus;
 import com.license.RequestLicense.Enumeration.Status;
 
+import ch.qos.logback.classic.Logger;
+
 @Service
 public class LicenseGenerator {
 	private static final String ALGORITHM = "AES";
 	private SecretKey secretKey = generateSecretKey();
-
 	private SecretKey generateSecretKey() {
 		try {
 			KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
@@ -110,23 +118,6 @@ public class LicenseGenerator {
 		return new DecryptedData(decryptedEmail, decryptedLicenseKey);
 	}
 
-	public void checkGracePeriod(LocalDate date) {
-		License license = new License();
-		LocalDate expiryDate = license.getExpiryDate();
-		LocalDate currentDate = LocalDate.now();
 
-		LocalDate gracePeriodStartDate = expiryDate.minusDays(7);
-
-		if (currentDate.isBefore(gracePeriodStartDate)) {
-			System.out.println("The grace period is ahead of expiry date.");
-
-		} else if (currentDate.isBefore(expiryDate)) {
-			System.out.println("The grace period is near to expiry date.");
-
-		} else {
-			System.out.println("The expiry date has passed.");
-
-		}
-	}
 
 }
