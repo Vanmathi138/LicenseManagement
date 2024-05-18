@@ -4,6 +4,7 @@ import java.security.Key;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -137,13 +138,15 @@ public class LicenseService {
         // Retrieve license information from the repository
         Optional<License> originalLicense = repository.findByEmailAndLicenseKey(decryptedEmail, decryptedLicenseKey);
         return originalLicense.map(license -> {
-        	LocalDate today =LocalDate.now();
-            LocalDate activationDate = LocalDate.now(); // Activation time is now
-            LocalDate expiryDate = activationDate.plusDays(3); // Expiry time is 5 minutes from activation
-            long daysUntilExpiration = ChronoUnit.DAYS.between(LocalDate.now(), expiryDate);
-            String gracePeriod = daysUntilExpiration + " days";
+        	LocalDateTime today =LocalDateTime.now();
+        	LocalDateTime activationDate = LocalDateTime.now(); // Activation time is now
+        	LocalDateTime expiryDate = activationDate.plusMinutes(3); // Expiry time is 5 minutes from activation
+ 
+        	//long minutesUntilExpiration = ChronoUnit.MINUTES.between(today, expiryDate);
+            //String gracePeriod = minutesUntilExpiration + " mins";
+            
             ExpiryStatus expiryStatus = today.isBefore(activationDate) ? ExpiryStatus.NOT_ACTIVATED : ExpiryStatus.ACTIVE;
-
+            
             if (license.getEmail().equals(decryptedEmail) && license.getLicenseKey().equals(decryptedLicenseKey)
                     && license.getStatus().equals(Status.REQUEST)) {
 
@@ -151,8 +154,8 @@ public class LicenseService {
                 license.setActivationDate(activationDate);
                 license.setExpiryDate(expiryDate);
                 license.setExpiryStatus(expiryStatus);
-                // Initial grace period
-                license.setGracePeriod(gracePeriod);
+
+                //license.setGracePeriod(gracePeriod);
                 repository.save(license);
 
                 return new DecryptedData(decryptedEmail, decryptedLicenseKey);
@@ -162,22 +165,42 @@ public class LicenseService {
         }).orElseThrow(() -> new IllegalArgumentException(messageService.messageResponse("Invalid encrypted data")));
 	}
 
-	@Scheduled(cron = "0 0 0 * * ?") // Runs daily at midnight
-	public void updateGracePeriod() {
-		List<License> companies = repository.findAll();
-		LocalDate today = LocalDate.now();
+   /* @Scheduled(cron = "0 0 0 * * ?") // Runs daily at midnight
+    public void updateGracePeriod() {
+        List<License> license = repository.findAll();
+        LocalDate today = LocalDate.now();
 
-		for (License license : companies) {
-			LocalDate expireDate = license.getExpiryDate();
-			if (expireDate != null) {
-				long daysUntilExpiration = ChronoUnit.DAYS.between(today, expireDate);
-				if (daysUntilExpiration >= 0) {
-					String gracePeriod = daysUntilExpiration + " days";
-					license.setGracePeriod(gracePeriod);
-					repository.save(license);
-				
-			}
-		}
-		}
+        for (License licenseGracePeriod : license) {
+            LocalDate expireDate = licenseGracePeriod.getExpiryDate();
+            if (expireDate != null) {
+                long daysUntilExpiration = ChronoUnit.DAYS.between(today, expireDate);
+                if (daysUntilExpiration >= 0) {
+                    String gracePeriod = daysUntilExpiration + " days";
+                    licenseGracePeriod.setGracePeriod(gracePeriod);
+                    repository.save(licenseGracePeriod);
+                }
+            }
+        }
+    }*/
+    @Scheduled(cron = "0 * * * * ?") // Runs every minute
+    public void updateGracePeriodInMins() {
+        List<License> licenses = repository.findAll();
+        LocalDateTime now = LocalDateTime.now();
+
+        for (License license : licenses) {
+            LocalDateTime activation = license.getActivationDate();
+            if (activation != null) {
+                LocalDateTime expiry = activation.plusMinutes(3);
+                
+                if(now.isAfter(expiry)) {
+                	LocalDateTime graceStart = expiry.plusMinutes(2);
+                	license.setExpiryStatus(ExpiryStatus.EXPIRED);
+                	license.setGracePeriod(graceStart);                      
+            
+            repository.save(license);
+
+            }
+        }
+    }
 }
 }

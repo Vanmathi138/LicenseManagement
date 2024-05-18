@@ -26,7 +26,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name="expiry_status")
+@Table(name="expiry")
 public class License {
 	 	@Id
 	    @GeneratedValue(strategy = GenerationType.AUTO)
@@ -40,17 +40,17 @@ public class License {
 	    private String email;
 
 	    @Column(name="grace_period")
-	    private String gracePeriod;
+	    private LocalDateTime gracePeriod;
 
 	    @Column(name = "status")
 	    @Enumerated(EnumType.STRING)
 	    private Status status;
 
 	    @Column(name = "activation_date")
-	    private LocalDate activationDate;
+	    private LocalDateTime activationDate;
 
 	    @Column(name="expiry_date")
-	    private LocalDate expiryDate;
+	    private LocalDateTime expiryDate;
 
 	    @Enumerated(EnumType.STRING)
 	    @Column(name="expiry_status")
