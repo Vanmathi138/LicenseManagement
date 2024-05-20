@@ -1,6 +1,6 @@
 package com.license.RequestLicense.Entity;
 
-import java.time.LocalDate ;
+
 import java.time.LocalDateTime;
 
 import com.license.RequestLicense.Enumeration.ExpiryStatus;
@@ -40,7 +40,7 @@ public class License {
 	    private String email;
 
 	    @Column(name="grace_period")
-	    private LocalDateTime gracePeriod;
+	    private String gracePeriod;
 
 	    @Column(name = "status")
 	    @Enumerated(EnumType.STRING)
