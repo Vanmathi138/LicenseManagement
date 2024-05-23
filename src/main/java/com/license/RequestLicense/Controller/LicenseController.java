@@ -1,4 +1,6 @@
 package com.license.RequestLicense.Controller;
+import java.util.Optional;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -42,7 +44,7 @@ public class LicenseController {
 	        }
 	    }
 	       
-	    @PostMapping("/encryption")
+	    @GetMapping("/encryption")
 	    public ResponseEntity<EncryptedData> encryptEmailAndLicenseKey(@RequestParam String companyName) {
 	        return service.encryptEmailAndLicenseKey(companyName);
 	    }	 
@@ -55,5 +57,20 @@ public class LicenseController {
 	        } else {
 	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 	        }
+	    }
+	    @GetMapping("/getById/{id}")
+	    public ResponseEntity<License> getById(@PathVariable Long id) {
+	        Optional<License> license = service.getById(id);
+	        if (license.isPresent()) {
+	            return ResponseEntity.ok(license.get());
+	        } else {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+	        }
+	    }
+	    
+	    @PutMapping("/approval")
+	    public ResponseEntity<License> approveLicense(@RequestBody DecryptedData decryptedData) {
+	        License approvedLicense = service.approval(decryptedData);
+	        return ResponseEntity.ok(approvedLicense);
 	    }
 }

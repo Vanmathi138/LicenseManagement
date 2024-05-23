@@ -1,6 +1,6 @@
 package com.license.RequestLicense.Service;
 
-import java.security.Key ;
+import java.security.Key;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -119,8 +119,6 @@ public class LicenseService {
 		}
 	}
 
-	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
 	public DecryptedData decryptEncryptedData(EncryptedData encryptedDataDto) throws Exception {
 		// Decrypt the secret key and encrypted data
 		String secretKeyStr = encryptedDataDto.getSecretKey();
@@ -158,8 +156,9 @@ public class LicenseService {
 
 				LocalDateTime graceEnd = expiryDate.plusMinutes(1);
 				String gracePeriod = "Grace period ends at: "
-						+ graceEnd.format(DateTimeFormatter.ofPattern("HH:mm:ss"));;
-				license.setGracePeriod(gracePeriod );
+						+ graceEnd.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+				;
+				license.setGracePeriod(gracePeriod);
 				repository.save(license);
 
 				return new DecryptedData(decryptedEmail, decryptedLicenseKey);
@@ -196,15 +195,15 @@ public class LicenseService {
 					if (now.isAfter(graceEnd)) {
 						license.setGracePeriod("grace period completed");
 					} else {
-						//String gracePeriod = "Grace period ends at: "
-								//+ graceEnd.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-						//license.setGracePeriod(gracePeriod);
+						// String gracePeriod = "Grace period ends at: "
+						// + graceEnd.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+						// license.setGracePeriod(gracePeriod);
 						Duration duration = Duration.between(now, graceEnd);
-	                    long minutesLeft = duration.toMinutes();
-	                    long secondsLeft = duration.minusMinutes(minutesLeft).getSeconds();
-	                    String gracePeriod = String.format("Grace period ends in: %02d:%02d", minutesLeft, secondsLeft);
-	                    license.setGracePeriod(gracePeriod);
-							
+						long minutesLeft = duration.toMinutes();
+						long secondsLeft = duration.minusMinutes(minutesLeft).getSeconds();
+						String gracePeriod = String.format("Grace period ends in: %02d:%02d", minutesLeft, secondsLeft);
+						license.setGracePeriod(gracePeriod);
+
 					}
 					license.setExpiryStatus(ExpiryStatus.EXPIRED);
 					repository.save(license);
@@ -213,4 +212,50 @@ public class LicenseService {
 		}
 	}
 
+	public Optional<License> getById(Long id) {
+
+		return repository.findById(id);
+	}
+
+	public License approval(DecryptedData decryptedData) {
+		Optional<License> originalLicenseOpt = repository.findByEmailAndLicenseKey(decryptedData.getEmail(),
+				decryptedData.getLicenseKey());
+
+		if (originalLicenseOpt.isPresent()) {
+			License originalLicense = originalLicenseOpt.get();
+
+			// Check if the license status is REQUEST
+			if (originalLicense.getStatus().equals(Status.REQUEST)) {
+				LocalDateTime activationDate = LocalDateTime.now(); // Activation time is now
+				LocalDateTime expiryDate = activationDate.plusMinutes(5); // Expiry time is 5 minutes from activation
+
+				// Determine expiry status based on activation and expiry date
+				LocalDateTime today = LocalDateTime.now();
+				ExpiryStatus expiryStatus = today.isBefore(activationDate) ? ExpiryStatus.NOT_ACTIVATED
+						: (today.isAfter(expiryDate) ? ExpiryStatus.EXPIRED : ExpiryStatus.ACTIVE);
+
+				// Update license details
+				originalLicense.setStatus(Status.APPROVED);
+				originalLicense.setActivationDate(activationDate);
+				originalLicense.setExpiryDate(expiryDate);
+				originalLicense.setExpiryStatus(expiryStatus);
+
+				LocalDateTime graceEnd = expiryDate.plusMinutes(1);
+				String gracePeriod = "Grace period ends at: "
+						+ graceEnd.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+				originalLicense.setGracePeriod(gracePeriod);
+
+				// Save the updated license
+				repository.save(originalLicense);
+
+				return originalLicense;
+			}else {
+                // If the license status is not REQUEST, throw an exception
+                throw new IllegalStateException("License status is not REQUEST. Approval cannot be performed.");
+            }
+        } else {
+            // If the license is not found, throw an exception
+            throw new IllegalArgumentException("License not found for the provided email and license key.");
+        }
+	}
 }
