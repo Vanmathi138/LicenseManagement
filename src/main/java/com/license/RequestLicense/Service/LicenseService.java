@@ -1,6 +1,6 @@
 package com.license.RequestLicense.Service;
 
-import java.security.Key;
+import java.security.Key ;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -119,7 +119,7 @@ public class LicenseService {
 		}
 	}
 
-	public DecryptedData decryptEncryptedData(EncryptedData encryptedDataDto) throws Exception {
+/*	public DecryptedData decryptEncryptedData(EncryptedData encryptedDataDto) throws Exception {
 		// Decrypt the secret key and encrypted data
 		String secretKeyStr = encryptedDataDto.getSecretKey();
 		String encryptedData = encryptedDataDto.getEncryptedData();
@@ -167,7 +167,7 @@ public class LicenseService {
 			}
 		}).orElseThrow(() -> new IllegalArgumentException(messageService.messageResponse("Invalid encrypted data")));
 	}
-
+*/
 	/*
 	 * @Scheduled(cron = "0 0 0 * * ?") // Runs daily at midnight public void
 	 * updateGracePeriod() { List<License> license = repository.findAll(); LocalDate
@@ -180,8 +180,8 @@ public class LicenseService {
 	 * " days"; licenseGracePeriod.setGracePeriod(gracePeriod);
 	 * repository.save(licenseGracePeriod); } } } }
 	 */
-	@Scheduled(cron = "*/1 * * * * ?") // Runs every minute
-	public void updateGracePeriodInMins() {
+	//@Scheduled(cron = "*/1 * * * * ?") // Runs every minute
+/*	public void updateGracePeriodInMins() {
 		List<License> licenses = repository.findAll();
 		LocalDateTime now = LocalDateTime.now();
 
@@ -211,10 +211,42 @@ public class LicenseService {
 			}
 		}
 	}
-
+*/
 	public Optional<License> getById(Long id) {
 
 		return repository.findById(id);
+	}
+
+//	@Scheduled(cron = "*/1 * * * * ?") // Runs every minute
+	/*public void updateGracePeriodInMins() {
+		List<License> licenses = repository.findAll();
+		LocalDateTime now = LocalDateTime.now();
+
+		for (License license : licenses) {
+			LocalDateTime activation = license.getActivationDate();
+			LocalDateTime expiry = license.getExpiryDate();
+
+			if (activation != null && expiry != null) {
+				LocalDateTime graceEnd = expiry.plusMinutes(1);
+
+				if (now.isAfter(expiry)) {
+					if (now.isAfter(graceEnd)) {
+						license.setGracePeriod("grace period completed");
+					} else {
+						Duration duration = Duration.between(now, graceEnd);
+						long minutesLeft = duration.toMinutes();
+						long secondsLeft = duration.minusMinutes(minutesLeft).getSeconds();
+						String gracePeriod = String.format("Grace period ends in: %02d:%02d", minutesLeft, secondsLeft);
+						license.setGracePeriod(gracePeriod);
+					}
+					license.setExpiryStatus(ExpiryStatus.EXPIRED);
+					repository.save(license);
+				} else if (now.isBefore(expiry) && license.getExpiryStatus() != ExpiryStatus.ACTIVE) {
+					license.setExpiryStatus(ExpiryStatus.ACTIVE);
+					repository.save(license);
+				}
+			}
+		}
 	}
 
 	public License approval(DecryptedData decryptedData) {
@@ -224,17 +256,12 @@ public class LicenseService {
 		if (originalLicenseOpt.isPresent()) {
 			License originalLicense = originalLicenseOpt.get();
 
-			// Check if the license status is REQUEST
 			if (originalLicense.getStatus().equals(Status.REQUEST)) {
-				LocalDateTime activationDate = LocalDateTime.now(); // Activation time is now
-				LocalDateTime expiryDate = activationDate.plusMinutes(5); // Expiry time is 5 minutes from activation
+				LocalDateTime activationDate = LocalDateTime.now();
+				LocalDateTime expiryDate = activationDate.plusMinutes(5);
 
-				// Determine expiry status based on activation and expiry date
-				LocalDateTime today = LocalDateTime.now();
-				ExpiryStatus expiryStatus = today.isBefore(activationDate) ? ExpiryStatus.NOT_ACTIVATED
-						: (today.isAfter(expiryDate) ? ExpiryStatus.EXPIRED : ExpiryStatus.ACTIVE);
+				ExpiryStatus expiryStatus = ExpiryStatus.ACTIVE;
 
-				// Update license details
 				originalLicense.setStatus(Status.APPROVED);
 				originalLicense.setActivationDate(activationDate);
 				originalLicense.setExpiryDate(expiryDate);
@@ -245,17 +272,77 @@ public class LicenseService {
 						+ graceEnd.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
 				originalLicense.setGracePeriod(gracePeriod);
 
-				// Save the updated license
 				repository.save(originalLicense);
 
 				return originalLicense;
-			}else {
-                // If the license status is not REQUEST, throw an exception
-                throw new IllegalStateException("License status is not REQUEST. Approval cannot be performed.");
-            }
-        } else {
-            // If the license is not found, throw an exception
-            throw new IllegalArgumentException("License not found for the provided email and license key.");
-        }
+			} else {
+				throw new IllegalStateException("License status is not REQUEST. Approval cannot be performed.");
+			}
+		} else {
+			throw new IllegalArgumentException("License not found for the provided email and license key.");
+		}
 	}
+*/
+	@Scheduled(cron = "0 0 0 * * ?") // Runs once a day at midnight
+	public void updateGracePeriodInMins() {
+	    List<License> licenses = repository.findAll();
+	    LocalDate now = LocalDate.now();
+
+	    for (License license : licenses) {
+	        LocalDate activation = license.getActivationDate();
+	        LocalDate expiry = license.getExpiryDate();
+
+	        if (activation != null && expiry != null) {
+	            LocalDate graceEnd = expiry.plusDays(1);
+
+	            if (now.isAfter(expiry)) {
+	                if (now.isAfter(graceEnd)) {
+	                    license.setGracePeriod("grace period completed");
+	                } else {
+	                    long daysLeft = java.time.temporal.ChronoUnit.DAYS.between(now, graceEnd);
+	                    String gracePeriod = String.format("Grace period ends in: %d day(s)", daysLeft);
+	                    license.setGracePeriod(gracePeriod);
+	                }
+	                license.setExpiryStatus(ExpiryStatus.EXPIRED);
+	                repository.save(license);
+	            } else if (now.isBefore(expiry) && license.getExpiryStatus() != ExpiryStatus.ACTIVE) {
+	                license.setExpiryStatus(ExpiryStatus.ACTIVE);
+	                repository.save(license);
+	            }
+	        }
+	    }
+	}
+
+
+	public License approval(DecryptedData decryptedData) {
+	    Optional<License> originalLicenseOpt = repository.findByEmailAndLicenseKey(decryptedData.getEmail(), decryptedData.getLicenseKey());
+
+	    if (originalLicenseOpt.isPresent()) {
+	        License originalLicense = originalLicenseOpt.get();
+
+	        if (originalLicense.getStatus().equals(Status.REQUEST)) {
+	            LocalDate activationDate = LocalDate.now();
+	            LocalDate expiryDate = activationDate.plusDays(1);
+	            ExpiryStatus expiryStatus = ExpiryStatus.ACTIVE;
+
+	            originalLicense.setStatus(Status.APPROVED);
+	            originalLicense.setActivationDate(activationDate);
+	            originalLicense.setExpiryDate(expiryDate);
+	            originalLicense.setExpiryStatus(expiryStatus);
+
+	            LocalDate graceEnd = expiryDate.plusDays(1);
+	            String gracePeriod = "Grace period ends on: " + graceEnd.toString();
+	            originalLicense.setGracePeriod(gracePeriod);
+
+	            repository.save(originalLicense);
+
+	            return originalLicense;
+	        } else {
+	            throw new IllegalStateException("License status is not REQUEST. Approval cannot be performed.");
+	        }
+	    } else {
+	        throw new IllegalArgumentException("License not found for the provided email and license key.");
+	    }
+	}
+
 }

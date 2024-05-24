@@ -1,10 +1,12 @@
 package com.license.RequestLicense.Entity;
 
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.license.RequestLicense.Enumeration.ExpiryStatus;
 import com.license.RequestLicense.Enumeration.Status;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -26,7 +28,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name="expiry")
+@Table(name="license")
 public class License {
 	 	@Id
 	    @GeneratedValue(strategy = GenerationType.AUTO)
@@ -47,10 +49,10 @@ public class License {
 	    private Status status;
 
 	    @Column(name = "activation_date")
-	    private LocalDateTime activationDate;
+	    private LocalDate activationDate;
 
 	    @Column(name="expiry_date")
-	    private LocalDateTime expiryDate;
+	    private LocalDate expiryDate;
 
 	    @Enumerated(EnumType.STRING)
 	    @Column(name="expiry_status")
