@@ -41,6 +41,8 @@ public class LicenseService {
 	private final LicenseRepository repository;
 	private final MessageService messageService;
 	private final LicenseGenerator licenseGenerator;
+	private final EmailSender emailService;
+	
 	private SecretKey secretKey = generateSecretKey();
 
 	private SecretKey generateSecretKey() {
@@ -60,14 +62,6 @@ public class LicenseService {
 		cipher.init(Cipher.ENCRYPT_MODE, secretKey);
 		byte[] encryptedBytes = cipher.doFinal(data.getBytes());
 		return Base64.getEncoder().encodeToString(encryptedBytes);
-	}
-
-// Method to decrypt data using a secret key
-	private String decrypt(String encryptedData, SecretKey secretKey) throws Exception {
-		Cipher cipher = Cipher.getInstance("AES");
-		cipher.init(Cipher.DECRYPT_MODE, secretKey);
-		byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
-		return new String(decryptedBytes);
 	}
 
 //create
@@ -92,7 +86,7 @@ public class LicenseService {
 	}
 
 //encrypt license key and mail with use of secret key
-	public ResponseEntity<EncryptedData> encryptEmailAndLicenseKey(String companyName) {
+	public ResponseEntity<EncryptedData> encryptEmailAndLicenseKey(String companyName, String email, String subject) {
 		try {
 			Optional<License> optionalLicense = repository.findByCompanyName(companyName);
 			if (optionalLicense.isEmpty()) {
@@ -111,6 +105,12 @@ public class LicenseService {
 			EncryptedData responseData = new EncryptedData();
 			responseData.setEncryptedData(encryptedLicenseKeyAndEmail);
 			responseData.setSecretKey(Base64.getEncoder().encodeToString(secretKey.getEncoded()));
+
+			// Send the encrypted data and secret key to the admin via email
+			//String adminEmail = "vanmathiazhagan@gmail.com";
+			//String subject = "Encrypted Data and Secret Key";
+			emailService.sendMail(email, subject, responseData.getSecretKey(),
+					responseData.getEncryptedData());
 
 			return ResponseEntity.ok(responseData);
 		} catch (Exception e) {
@@ -304,16 +304,13 @@ public class LicenseService {
 	                    license.setGracePeriod(gracePeriod);
 	                }
 	                license.setExpiryStatus(ExpiryStatus.EXPIRED);
-	                repository.save(license);
 	            } else if (now.isBefore(expiry) && license.getExpiryStatus() != ExpiryStatus.ACTIVE) {
 	                license.setExpiryStatus(ExpiryStatus.ACTIVE);
-	                repository.save(license);
 	            }
+	            repository.save(license);
 	        }
 	    }
 	}
-
-
 	public License approval(DecryptedData decryptedData) {
 	    Optional<License> originalLicenseOpt = repository.findByEmailAndLicenseKey(decryptedData.getEmail(), decryptedData.getLicenseKey());
 

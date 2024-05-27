@@ -47,8 +47,11 @@ public class LicenseController {
 	}
 
 	@GetMapping("/encryption")
-	public ResponseEntity<EncryptedData> encryptEmailAndLicenseKey(@RequestParam String companyName) {
-		return service.encryptEmailAndLicenseKey(companyName);
+	public ResponseEntity<EncryptedData> encryptEmailAndLicenseKey(
+			@RequestParam String companyName,
+			@RequestParam String email,
+			@RequestParam String subject) {
+		return service.encryptEmailAndLicenseKey(companyName,email,subject);
 	}
 
 /*	@PutMapping("/decryption")
