@@ -12,18 +12,13 @@ import lombok.RequiredArgsConstructor;
 public class EmailSender {
 	private final JavaMailSender mailSender;
 	
-	public void sendMail(String to, String subject, String secretKey, String encryptedData) {
+	public void sendMail(String to, String subject, String content) {
 		try {
 			MimeMessage message = mailSender.createMimeMessage();
 			MimeMessageHelper helper = new MimeMessageHelper(message,true);
 			
 			helper.setTo(to);
 			helper.setSubject(subject);
-			 String content = String.format(
-		                "Here are the encrypted details:\n\nSecret Key: %s\n\nEncrypted Data: %s",
-		                secretKey,
-		                encryptedData
-		            );
 			helper.setText(content);
 			
 			mailSender.send(message);

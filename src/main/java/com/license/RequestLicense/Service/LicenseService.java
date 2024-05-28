@@ -95,7 +95,7 @@ public class LicenseService {
 			}
 
 			License license = optionalLicense.get();
-
+	
 			// Encrypt the email and license key
 			String encryptedEmail = encrypt(license.getEmail(), secretKey);
 			String encryptedLicenseKey = encrypt(license.getLicenseKey(), secretKey);
@@ -106,11 +106,14 @@ public class LicenseService {
 			responseData.setEncryptedData(encryptedLicenseKeyAndEmail);
 			responseData.setSecretKey(Base64.getEncoder().encodeToString(secretKey.getEncoded()));
 
+			// Decrypt the data
+            String decryptedEmail = LicenseGenerator.decrypt(encryptedEmail, secretKey);
+            String decryptedLicenseKey = LicenseGenerator.decrypt(encryptedLicenseKey, secretKey);
+            String decryptedData = "Email: " + decryptedEmail + "\nLicense Key: " + decryptedLicenseKey;
+
 			// Send the encrypted data and secret key to the admin via email
-			//String adminEmail = "vanmathiazhagan@gmail.com";
-			//String subject = "Encrypted Data and Secret Key";
-			emailService.sendMail(email, subject, responseData.getSecretKey(),
-					responseData.getEncryptedData());
+			String content= "Encrypted Data: " + responseData + "\n\nDecrypted Data:\n" + decryptedData;
+			emailService.sendMail(email, subject, content);
 
 			return ResponseEntity.ok(responseData);
 		} catch (Exception e) {
