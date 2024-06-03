@@ -42,6 +42,7 @@ public class LicenseService {
 	private final MessageService messageService;
 	private final LicenseGenerator licenseGenerator;
 	private final EmailSender emailService;
+	private final OtpService otpService;
 	
 	private SecretKey secretKey = generateSecretKey();
 
@@ -69,6 +70,11 @@ public class LicenseService {
 		License license = new License();
 		license = License.builder().companyName(licenseDto.getCompanyName()).email(licenseDto.getEmail())
 				.status(Status.REQUEST).build();
+		
+		String otp = otpService.generateOtp();
+		otpService.storeOtp(licenseDto.getEmail(), otp);
+		emailService.sendOtp(licenseDto.getEmail(), otp);
+		
 		return repository.save(license);
 	}
 
@@ -85,7 +91,7 @@ public class LicenseService {
 		return repository.save(license);
 	}
 
-//encrypt license key and mail with use of secret key
+//encrypt and decrypt the license key and mail with use of secret key
 	public ResponseEntity<EncryptedData> encryptEmailAndLicenseKey(String companyName, String email, String subject) {
 		try {
 			Optional<License> optionalLicense = repository.findByCompanyName(companyName);
@@ -122,99 +128,6 @@ public class LicenseService {
 		}
 	}
 
-/*	public DecryptedData decryptEncryptedData(EncryptedData encryptedDataDto) throws Exception {
-		// Decrypt the secret key and encrypted data
-		String secretKeyStr = encryptedDataDto.getSecretKey();
-		String encryptedData = encryptedDataDto.getEncryptedData();
-		byte[] decodedKey = Base64.getDecoder().decode(secretKeyStr);
-		SecretKey originalKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
-
-		String[] parts = encryptedData.split("\\|");
-		String encryptedEmail = parts[0];
-		String encryptedLicenseKey = parts[1];
-
-		String decryptedEmail = decrypt(encryptedEmail, originalKey);
-		String decryptedLicenseKey = decrypt(encryptedLicenseKey, originalKey);
-
-		// Retrieve license information from the repository
-		Optional<License> originalLicense = repository.findByEmailAndLicenseKey(decryptedEmail, decryptedLicenseKey);
-		return originalLicense.map(license -> {
-			LocalDateTime today = LocalDateTime.now();
-			LocalDateTime activationDate = LocalDateTime.now(); // Activation time is now
-			LocalDateTime expiryDate = activationDate.plusMinutes(2); // Expiry time is 5 minutes from activation
-
-			// long minutesUntilExpiration = ChronoUnit.MINUTES.between(today, expiryDate);
-			// String gracePeriod = minutesUntilExpiration + " mins";
-
-			ExpiryStatus expiryStatus = today.isBefore(activationDate) ? ExpiryStatus.NOT_ACTIVATED
-					: today.isAfter(expiryDate) ? ExpiryStatus.EXPIRED : ExpiryStatus.ACTIVE;
-
-			if (license.getEmail().equals(decryptedEmail) && license.getLicenseKey().equals(decryptedLicenseKey)
-					&& license.getStatus().equals(Status.REQUEST)) {
-
-				license.setStatus(Status.APPROVED);
-				license.setActivationDate(activationDate);
-				license.setExpiryDate(expiryDate);
-				license.setExpiryStatus(expiryStatus);
-
-				LocalDateTime graceEnd = expiryDate.plusMinutes(1);
-				String gracePeriod = "Grace period ends at: "
-						+ graceEnd.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-				;
-				license.setGracePeriod(gracePeriod);
-				repository.save(license);
-
-				return new DecryptedData(decryptedEmail, decryptedLicenseKey);
-			} else {
-				throw new IllegalArgumentException("Decryption failed");
-			}
-		}).orElseThrow(() -> new IllegalArgumentException(messageService.messageResponse("Invalid encrypted data")));
-	}
-*/
-	/*
-	 * @Scheduled(cron = "0 0 0 * * ?") // Runs daily at midnight public void
-	 * updateGracePeriod() { List<License> license = repository.findAll(); LocalDate
-	 * today = LocalDate.now();
-	 * 
-	 * for (License licenseGracePeriod : license) { LocalDate expireDate =
-	 * licenseGracePeriod.getExpiryDate(); if (expireDate != null) { long
-	 * daysUntilExpiration = ChronoUnit.DAYS.between(today, expireDate); if
-	 * (daysUntilExpiration >= 0) { String gracePeriod = daysUntilExpiration +
-	 * " days"; licenseGracePeriod.setGracePeriod(gracePeriod);
-	 * repository.save(licenseGracePeriod); } } } }
-	 */
-	//@Scheduled(cron = "*/1 * * * * ?") // Runs every minute
-/*	public void updateGracePeriodInMins() {
-		List<License> licenses = repository.findAll();
-		LocalDateTime now = LocalDateTime.now();
-
-		for (License license : licenses) {
-			LocalDateTime activation = license.getActivationDate();
-			if (activation != null) {
-				LocalDateTime expiry = activation.plusMinutes(2);
-				LocalDateTime graceEnd = expiry.plusMinutes(1);
-
-				if (now.isAfter(expiry)) {
-					if (now.isAfter(graceEnd)) {
-						license.setGracePeriod("grace period completed");
-					} else {
-						// String gracePeriod = "Grace period ends at: "
-						// + graceEnd.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-						// license.setGracePeriod(gracePeriod);
-						Duration duration = Duration.between(now, graceEnd);
-						long minutesLeft = duration.toMinutes();
-						long secondsLeft = duration.minusMinutes(minutesLeft).getSeconds();
-						String gracePeriod = String.format("Grace period ends in: %02d:%02d", minutesLeft, secondsLeft);
-						license.setGracePeriod(gracePeriod);
-
-					}
-					license.setExpiryStatus(ExpiryStatus.EXPIRED);
-					repository.save(license);
-				}
-			}
-		}
-	}
-*/
 	public Optional<License> getById(Long id) {
 
 		return repository.findById(id);
@@ -321,9 +234,13 @@ public class LicenseService {
 	        License originalLicense = originalLicenseOpt.get();
 
 	        if (originalLicense.getStatus().equals(Status.REQUEST)) {
+	        	LocalDate today = LocalDate.now();
 	            LocalDate activationDate = LocalDate.now();
 	            LocalDate expiryDate = activationDate.plusDays(1);
-	            ExpiryStatus expiryStatus = ExpiryStatus.ACTIVE;
+	            //ExpiryStatus expiryStatus = ExpiryStatus.ACTIVE;
+	            ExpiryStatus expiryStatus = today.isBefore(activationDate) ? ExpiryStatus.NOT_ACTIVATED
+						: today.isAfter(expiryDate) ? ExpiryStatus.EXPIRED : ExpiryStatus.ACTIVE;
+           
 
 	            originalLicense.setStatus(Status.APPROVED);
 	            originalLicense.setActivationDate(activationDate);
@@ -343,6 +260,42 @@ public class LicenseService {
 	    } else {
 	        throw new IllegalArgumentException("License not found for the provided email and license key.");
 	    }
+	}
+
+	public ResponseEntity<EncryptedData> encryption(String companyName) {
+		try {
+			Optional<License> optionalLicense = repository.findByCompanyName(companyName);
+			if (optionalLicense.isEmpty()) {
+				// If the name doesn't exist, return a bad request response
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+			}
+
+			License license = optionalLicense.get();
+
+			// Encrypt the email and license key
+			String encryptedEmail = encrypt(license.getEmail(), secretKey);
+			String encryptedLicenseKey = encrypt(license.getLicenseKey(), secretKey);
+			String encryptedLicenseKeyAndEmail = encryptedEmail + "|" + encryptedLicenseKey;
+
+			// Create a response object to hold encrypted data and secret key
+			EncryptedData responseData = new EncryptedData();
+			responseData.setEncryptedData(encryptedLicenseKeyAndEmail);
+			responseData.setSecretKey(Base64.getEncoder().encodeToString(secretKey.getEncoded()));
+
+			return ResponseEntity.ok(responseData);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+		}
+	}
+
+	public ResponseEntity<?> validateOtpAndEmail(String email, String otp) {
+		boolean isValid = otpService.validateOtp(email, otp);
+		if (isValid) {
+			return ResponseEntity.ok("Email is verified!");
+		} else {
+			return ResponseEntity.status(400).body("Invalid or expired OTP.");
+		}
 	}
 
 }

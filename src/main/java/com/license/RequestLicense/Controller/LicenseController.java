@@ -46,7 +46,7 @@ public class LicenseController {
 		}
 	}
 
-	@GetMapping("/encryption")
+	@GetMapping("/encryptionAndDecrypt")
 	public ResponseEntity<EncryptedData> encryptEmailAndLicenseKey(
 			@RequestParam String companyName,
 			@RequestParam String email,
@@ -54,6 +54,14 @@ public class LicenseController {
 		return service.encryptEmailAndLicenseKey(companyName,email,subject);
 	}
 
+	@GetMapping("/encryption")
+	public ResponseEntity<ResponseEntity<EncryptedData>> encryption(@RequestParam String companyName){
+		return service.encryption(companyName);
+	}
+	@GetMapping("/validation")
+	public ResponseEntity<?> validOtpAndEmail(@RequestParam String email,@RequestParam String otp){
+		return service.validateOtpAndEmail(email,otp);
+	}
 /*	@PutMapping("/decryption")
 	public ResponseEntity<DecryptedData> decryptEmailAndLicenseKey(@RequestBody EncryptedData encryptedDataDto)
 			throws Exception {
