@@ -55,7 +55,7 @@ public class LicenseController {
 	}
 
 	@GetMapping("/encryption")
-	public ResponseEntity<ResponseEntity<EncryptedData>> encryption(@RequestParam String companyName){
+	public ResponseEntity<EncryptedData> encryption(@RequestParam String companyName){
 		return service.encryption(companyName);
 	}
 	@GetMapping("/validation")

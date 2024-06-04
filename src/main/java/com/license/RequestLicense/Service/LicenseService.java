@@ -29,6 +29,7 @@ import com.license.RequestLicense.DTO.DecryptedData;
 import com.license.RequestLicense.DTO.EncryptedData;
 import com.license.RequestLicense.DTO.LicenseDto;
 import com.license.RequestLicense.Entity.License;
+import com.license.RequestLicense.Entity.OTP;
 import com.license.RequestLicense.Enumeration.ExpiryStatus;
 import com.license.RequestLicense.Enumeration.Status;
 import com.license.RequestLicense.Repository.LicenseRepository;
@@ -72,7 +73,7 @@ public class LicenseService {
 				.status(Status.REQUEST).build();
 		
 		String otp = otpService.generateOtp();
-		otpService.storeOtp(licenseDto.getEmail(), otp);
+		OTP otpEntity = otpService.storeOtp(otp);
 		emailService.sendOtp(licenseDto.getEmail(), otp);
 		
 		return repository.save(license);
