@@ -1,26 +1,13 @@
 package com.license.RequestLicense.Service;
 
-import java.security.Key ;
-import java.time.Duration;
+import java.security.Key;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -28,6 +15,7 @@ import org.springframework.stereotype.Service;
 import com.license.RequestLicense.DTO.DecryptedData;
 import com.license.RequestLicense.DTO.EncryptedData;
 import com.license.RequestLicense.DTO.LicenseDto;
+import com.license.RequestLicense.DTO.ResetPasswordDto;
 import com.license.RequestLicense.Entity.License;
 import com.license.RequestLicense.Entity.OTP;
 import com.license.RequestLicense.Enumeration.ExpiryStatus;
@@ -70,7 +58,7 @@ public class LicenseService {
 	public License saveLicense(LicenseDto licenseDto) {
 		License license = new License();
 		license = License.builder().companyName(licenseDto.getCompanyName()).email(licenseDto.getEmail())
-				.status(Status.REQUEST).build();
+				.password(licenseDto.getPassword()).status(Status.REQUEST).build();
 		
 		String otp = otpService.generateOtp();
 		OTP otpEntity = otpService.storeOtp(otp);
@@ -299,4 +287,31 @@ public class LicenseService {
 		}
 	}
 
+	public ResponseEntity<?> forgetPassword(String email, String comapanyName) {
+		String otp = otpService.generateOtp();
+		OTP otpEntity = otpService.storeOtp(otp);
+		emailService.sendOtp(email, otp);
+		return ResponseEntity.ok("sent");
+	}
+
+	public ResponseEntity<?> resetPassword(String email, String comapanyName, String otp, String password) {
+		boolean isValid = otpService.validateOtp(email, otp);
+
+		if (isValid) {
+			Optional<License> optionalLicense = repository.findByCompanyName(comapanyName);
+
+			if (optionalLicense.isEmpty()) {
+				return ResponseEntity.status(400).body("Invalid Email id.");
+			}
+
+			License license = optionalLicense.get();
+			license.setPassword(password); // Assuming License has a password field
+
+			repository.save(license);
+
+			return ResponseEntity.ok("Password updated successfully.");
+		} else {
+			return ResponseEntity.status(400).body("Invalid or expired OTP.");
+		}
+	}
 }

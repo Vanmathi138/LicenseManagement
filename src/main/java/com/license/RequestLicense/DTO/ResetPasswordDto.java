@@ -9,11 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LicenseDto {
-	private String companyName;
-	private String email;
+public class ResetPasswordDto {
+	private String comapanyName;
 	private String password;
-	private String licenseKey;
-	public String id;
-
 }

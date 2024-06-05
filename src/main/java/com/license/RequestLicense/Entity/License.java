@@ -28,7 +28,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name="license")
+@Table(name="license_signUp")
 public class License {
 	 	@Id
 	    @GeneratedValue(strategy = GenerationType.AUTO)
@@ -40,6 +40,9 @@ public class License {
 
 	    @Column(name="email")
 	    private String email;
+	    
+	    @Column(name="password")
+	    private String password;
 
 	    @Column(name="grace_period")
 	    private String gracePeriod;

@@ -1,7 +1,8 @@
 package com.license.RequestLicense.Controller;
 
-import java.util.Optional;
+import java.util.Optional ;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -12,14 +13,18 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.license.RequestLicense.DTO.DecryptedData;
 import com.license.RequestLicense.DTO.EncryptedData;
 import com.license.RequestLicense.DTO.LicenseDto;
+import com.license.RequestLicense.DTO.ResetPasswordDto;
 import com.license.RequestLicense.Entity.License;
+import com.license.RequestLicense.Entity.OTP;
 import com.license.RequestLicense.Service.LicenseService;
 import lombok.RequiredArgsConstructor;
 
-@Controller
+@RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class LicenseController {
@@ -62,17 +67,6 @@ public class LicenseController {
 	public ResponseEntity<?> validOtpAndEmail(@RequestParam String email,@RequestParam String otp){
 		return service.validateOtpAndEmail(email,otp);
 	}
-/*	@PutMapping("/decryption")
-	public ResponseEntity<DecryptedData> decryptEmailAndLicenseKey(@RequestBody EncryptedData encryptedDataDto)
-			throws Exception {
-		DecryptedData decryptedData = service.decryptEncryptedData(encryptedDataDto);
-		if (decryptedData != null) {
-			return ResponseEntity.ok(decryptedData);
-		} else {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-		}
-	}*/
-
 	@GetMapping("/getById/{id}")
 	public ResponseEntity<License> getById(@PathVariable Long id) {
 		Optional<License> license = service.getById(id);
@@ -82,10 +76,22 @@ public class LicenseController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
 	}
-
 	@PutMapping("/approval")
 	public ResponseEntity<License> approveLicense(@RequestBody DecryptedData decryptedData) {
 		License approvedLicense = service.approval(decryptedData);
 		return ResponseEntity.ok(approvedLicense);
+	}
+	@GetMapping("/forgot-password")
+	public ResponseEntity<?> forgetPassword(@RequestParam String email, @RequestParam String comapanyName){
+		return service.forgetPassword(email,comapanyName);
+	}
+
+	@PutMapping("/reset-password")
+	public ResponseEntity<?> resetPassword(@RequestParam String email, 
+			@RequestParam String comapanyName,
+			@RequestParam String otp,
+			@RequestBody ResetPasswordDto resetPasswordRequest) {
+		return service.resetPassword(email, comapanyName, otp, 
+				resetPasswordRequest.getPassword());
 	}
 }
