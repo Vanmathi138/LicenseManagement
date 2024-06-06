@@ -34,7 +34,7 @@ public class OtpService {
     }
     
     public boolean validateOtp(String email, String otp) {
-        OTP otpEntity = otpRepo.findByOtp(otp);
+        OTP otpEntity = otpRepo.findByOtp(email);//changes
         if (otpEntity == null) {
             return false; // No OTP found
         }

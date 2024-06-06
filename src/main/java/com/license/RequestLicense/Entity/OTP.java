@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,9 +16,10 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "otp")
+@Table(name = "otp_1")
 public class OTP {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +28,12 @@ public class OTP {
 	@Column(name="otp")
 	private String otp;
 	
+	@Column(name="email")
+	private String email;
+	 
 	@CreatedDate
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private LocalTime createdAt;
+	
+	
 }

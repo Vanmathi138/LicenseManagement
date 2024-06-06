@@ -8,5 +8,6 @@ import com.license.RequestLicense.Entity.OTP;
 @Repository
 public interface OtpRepository extends JpaRepository<OTP, Integer>{
 
-	OTP findByOtp(String otp);
+	OTP findByOtp(String email);
+
 }

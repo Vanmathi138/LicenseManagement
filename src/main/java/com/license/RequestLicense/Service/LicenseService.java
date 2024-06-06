@@ -2,6 +2,7 @@ package com.license.RequestLicense.Service;
 
 import java.security.Key;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +22,7 @@ import com.license.RequestLicense.Entity.OTP;
 import com.license.RequestLicense.Enumeration.ExpiryStatus;
 import com.license.RequestLicense.Enumeration.Status;
 import com.license.RequestLicense.Repository.LicenseRepository;
+import com.license.RequestLicense.Repository.OtpRepository;
 import com.license.RequestLicense.response.MessageService;
 import lombok.RequiredArgsConstructor;
 
@@ -53,18 +55,25 @@ public class LicenseService {
 		byte[] encryptedBytes = cipher.doFinal(data.getBytes());
 		return Base64.getEncoder().encodeToString(encryptedBytes);
 	}
-
+	 private final OtpRepository otpRepository;
 //create
 	public License saveLicense(LicenseDto licenseDto) {
 		License license = new License();
 		license = License.builder().companyName(licenseDto.getCompanyName()).email(licenseDto.getEmail())
 				.password(licenseDto.getPassword()).status(Status.REQUEST).build();
 		
-		String otp = otpService.generateOtp();
-		OTP otpEntity = otpService.storeOtp(otp);
-		emailService.sendOtp(licenseDto.getEmail(), otp);
-		
-		return repository.save(license);
+
+        License savedLicense = repository.save(license);
+
+        // Generate OTP and save to database
+        String otp = otpService.generateOtp();
+        OTP otpEntity = new OTP(0, otp, licenseDto.getEmail(),LocalTime.now());
+        otpRepository.save(otpEntity); //changes
+
+        // Send OTP via email
+        emailService.sendOtp(licenseDto.getEmail(), otp);
+
+        return savedLicense;
 	}
 
 //generate license key
@@ -279,6 +288,7 @@ public class LicenseService {
 	}
 
 	public ResponseEntity<?> validateOtpAndEmail(String email, String otp) {
+		
 		boolean isValid = otpService.validateOtp(email, otp);
 		if (isValid) {
 			return ResponseEntity.ok("Email is verified!");
@@ -301,7 +311,7 @@ public class LicenseService {
 			Optional<License> optionalLicense = repository.findByCompanyName(comapanyName);
 
 			if (optionalLicense.isEmpty()) {
-				return ResponseEntity.status(400).body("Invalid Email id.");
+				return ResponseEntity.status(400).body("Invalid Company name or email.");
 			}
 
 			License license = optionalLicense.get();
