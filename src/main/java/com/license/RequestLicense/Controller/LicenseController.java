@@ -1,11 +1,9 @@
 package com.license.RequestLicense.Controller;
 
-import java.util.Optional ;
+import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +18,6 @@ import com.license.RequestLicense.DTO.EncryptedData;
 import com.license.RequestLicense.DTO.LicenseDto;
 import com.license.RequestLicense.DTO.ResetPasswordDto;
 import com.license.RequestLicense.Entity.License;
-import com.license.RequestLicense.Entity.OTP;
 import com.license.RequestLicense.Service.LicenseService;
 import lombok.RequiredArgsConstructor;
 
@@ -94,4 +91,21 @@ public class LicenseController {
 		return service.resetPassword(email, comapanyName, otp, 
 				resetPasswordRequest.getPassword());
 	}
+	
+	
+	
+	@GetMapping("/forgot-password")
+	public ResponseEntity<?> forget(@RequestParam String email, @RequestParam String comapanyName){
+		return service.forgetPassword(email,comapanyName);
+	}
+
+	@PutMapping("/reset-password")
+	public ResponseEntity<?> reset(@RequestParam String email, 
+			@RequestParam String comapanyName,
+			@RequestParam String otp,
+			@RequestBody ResetPasswordDto resetPasswordRequest) {
+		return service.resetPassword(email, comapanyName, otp, 
+				resetPasswordRequest.getPassword());
+	}
+
 }

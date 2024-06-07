@@ -1,6 +1,7 @@
 package com.license.RequestLicense.Service;
 
 import java.security.Key;
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -8,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Optional;
@@ -25,13 +27,16 @@ import org.springframework.stereotype.Service;
 import com.license.RequestLicense.DTO.DecryptedData;
 import com.license.RequestLicense.DTO.EncryptedData;
 import com.license.RequestLicense.Entity.License;
+import com.license.RequestLicense.Entity.OTP;
 import com.license.RequestLicense.Enumeration.ExpiryStatus;
 import com.license.RequestLicense.Enumeration.Status;
+import com.license.RequestLicense.Repository.OtpRepository;
 
 import ch.qos.logback.classic.Logger;
 
 @Service
 public class LicenseGenerator {
+	private final OtpRepository otpRepo = null;
 	private static final String ALGORITHM = "AES";
 	private SecretKey secretKey = generateSecretKey();
 	private SecretKey generateSecretKey() {
@@ -130,4 +135,30 @@ public class LicenseGenerator {
 		return new DecryptedData(decryptedEmail, decryptedLicenseKey);
 	}
 
+	public String generateOtp() {
+
+		final SecureRandom random = new SecureRandom();
+		int otp = random.nextInt(900000) + 100000; // Generates a number between 100000 and 999999
+		return String.valueOf(otp); // Convert the number to a String and return it
+	}
+
+	public OTP storeOtp(String otp) {
+		LocalTime createAt = LocalTime.now();
+		OTP otpEntity = new OTP();
+		otpEntity.setOtp(otp);
+		otpEntity.setCreatedAt(createAt);
+		return otpRepo.save(otpEntity);
+	}
+
+	public boolean validateOtp(String email, String otp) {
+		OTP otpEntity = otpRepo.findByOtp(email);// changes
+		if (otpEntity == null) {
+			return false; // No OTP found
+		}
+		if (LocalTime.now().isAfter(otpEntity.getCreatedAt().plusMinutes(5))) {
+			otpRepo.delete(otpEntity); // Remove expired OTP
+			return false; // OTP is expired
+		}
+		return otpEntity.getOtp().equals(otp); // Check if OTP matches
+	}
 }
