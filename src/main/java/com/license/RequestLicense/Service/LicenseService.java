@@ -1,6 +1,6 @@
 package com.license.RequestLicense.Service;
 
-import java.security.Key;
+import java.security.Key ;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Base64;
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import com.license.RequestLicense.DTO.DecryptedData;
 import com.license.RequestLicense.DTO.EncryptedData;
 import com.license.RequestLicense.DTO.LicenseDto;
-import com.license.RequestLicense.DTO.ResetPasswordDto;
 import com.license.RequestLicense.Entity.License;
 import com.license.RequestLicense.Entity.OTP;
 import com.license.RequestLicense.Enumeration.ExpiryStatus;
@@ -163,39 +162,7 @@ public class LicenseService {
 		}
 	}
 
-	public License approval(DecryptedData decryptedData) {
-		Optional<License> originalLicenseOpt = repository.findByEmailAndLicenseKey(decryptedData.getEmail(),
-				decryptedData.getLicenseKey());
 
-		if (originalLicenseOpt.isPresent()) {
-			License originalLicense = originalLicenseOpt.get();
-
-			if (originalLicense.getStatus().equals(Status.REQUEST)) {
-				LocalDateTime activationDate = LocalDateTime.now();
-				LocalDateTime expiryDate = activationDate.plusMinutes(5);
-
-				ExpiryStatus expiryStatus = ExpiryStatus.ACTIVE;
-
-				originalLicense.setStatus(Status.APPROVED);
-				originalLicense.setActivationDate(activationDate);
-				originalLicense.setExpiryDate(expiryDate);
-				originalLicense.setExpiryStatus(expiryStatus);
-
-				LocalDateTime graceEnd = expiryDate.plusMinutes(1);
-				String gracePeriod = "Grace period ends at: "
-						+ graceEnd.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-				originalLicense.setGracePeriod(gracePeriod);
-
-				repository.save(originalLicense);
-
-				return originalLicense;
-			} else {
-				throw new IllegalStateException("License status is not REQUEST. Approval cannot be performed.");
-			}
-		} else {
-			throw new IllegalArgumentException("License not found for the provided email and license key.");
-		}
-	}
 */
 	@Scheduled(cron = "0 0 0 * * ?") // Runs once a day at midnight
 	public void updateGracePeriodInMins() {
