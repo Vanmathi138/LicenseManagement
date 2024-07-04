@@ -130,40 +130,6 @@ public class LicenseService {
 		return repository.findById(id);
 	}
 
-//	@Scheduled(cron = "*/1 * * * * ?") // Runs every minute
-	/*public void updateGracePeriodInMins() {
-		List<License> licenses = repository.findAll();
-		LocalDateTime now = LocalDateTime.now();
-
-		for (License license : licenses) {
-			LocalDateTime activation = license.getActivationDate();
-			LocalDateTime expiry = license.getExpiryDate();
-
-			if (activation != null && expiry != null) {
-				LocalDateTime graceEnd = expiry.plusMinutes(1);
-
-				if (now.isAfter(expiry)) {
-					if (now.isAfter(graceEnd)) {
-						license.setGracePeriod("grace period completed");
-					} else {
-						Duration duration = Duration.between(now, graceEnd);
-						long minutesLeft = duration.toMinutes();
-						long secondsLeft = duration.minusMinutes(minutesLeft).getSeconds();
-						String gracePeriod = String.format("Grace period ends in: %02d:%02d", minutesLeft, secondsLeft);
-						license.setGracePeriod(gracePeriod);
-					}
-					license.setExpiryStatus(ExpiryStatus.EXPIRED);
-					repository.save(license);
-				} else if (now.isBefore(expiry) && license.getExpiryStatus() != ExpiryStatus.ACTIVE) {
-					license.setExpiryStatus(ExpiryStatus.ACTIVE);
-					repository.save(license);
-				}
-			}
-		}
-	}
-
-
-*/
 	@Scheduled(cron = "0 0 0 * * ?") // Runs once a day at midnight
 	public void updateGracePeriodInMins() {
 	    List<License> licenses = repository.findAll();
@@ -268,6 +234,7 @@ public class LicenseService {
 		String otp = otpService.generateOtp();
 		OTP otpEntity = otpService.storeOtp(otp);
 		emailService.sendOtp(email, otp);
+		
 		return ResponseEntity.ok("sent");
 	}
 

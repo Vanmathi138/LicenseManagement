@@ -52,16 +52,4 @@ public class OtpService {
     	otpEntity.setCreatedAt(createAt);
     	return otpRepo.save(otpEntity); 
     }
-    
-    public boolean validate(String email, String otp) {
-        OTP otpEntity = otpRepo.findByOtp(email);//changes
-        if (otpEntity == null) {
-            return false; // No OTP found
-        }
-        if (LocalTime.now().isAfter(otpEntity.getCreatedAt().plusMinutes(5))) {
-            otpRepo.delete(otpEntity); // Remove expired OTP
-            return false; // OTP is expired
-        }
-        return otpEntity.getOtp().equals(otp); // Check if OTP matches
-    }
 }

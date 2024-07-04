@@ -72,18 +72,6 @@ public class LicenseGenerator {
 		return Base64.getEncoder().encodeToString(encryptedBytes);
 	}
 
-/*	public static String decrypt(String encryptedData, String base64SecretKey) throws Exception {
-		byte[] decodedKey = Base64.getDecoder().decode(base64SecretKey);
-		SecretKey secretKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
-
-		Cipher cipher = Cipher.getInstance("AES");
-		cipher.init(Cipher.DECRYPT_MODE, secretKey);
-		byte[] decodedData = Base64.getDecoder().decode(encryptedData);
-		byte[] decryptedBytes = cipher.doFinal(decodedData);
-
-		return new String(decryptedBytes);
-	}*/
-
 	// Method to decrypt data using a secret key
 	public static String decrypt(String encryptedData, SecretKey secretKey) throws Exception {
 		Cipher cipher = Cipher.getInstance("AES");

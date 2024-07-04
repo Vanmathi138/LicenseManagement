@@ -39,21 +39,5 @@ public class EmailSender {
 		message.setText("Your OTP code is: " + otp + "\n\nThis OTP is valid for 5 minutes only.");
 		mailSender.send(message);
 	}
-	
-	
-	public void mailSend(String to, String subject, String content) {
-		try {
-			MimeMessage message = mailSender.createMimeMessage();
-			MimeMessageHelper helper = new MimeMessageHelper(message,true);
-			
-			helper.setTo(to);
-			helper.setSubject(subject);
-			helper.setText(content);
-			
-			mailSender.send(message);
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
-	}
 
 }
